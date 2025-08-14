@@ -1,0 +1,40 @@
+﻿@model IEnumerable<WarehouseManagement.Models.Unit>
+@using WarehouseManagement.Models
+
+@{
+    ViewData["Title"] = "Единицы измерения";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Добавить новую</a>
+    <a asp-action="Index" asp-route-showInactive="true" class="btn btn-outline-secondary">Показать архив</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Наименование</th>
+            <th>Статус</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                <td>@(item.IsActive ? "Активна" : "В архиве")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Изменить</a>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Подробности</a>
+                    @if (item.IsActive)
+                    {
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">В архив</a>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

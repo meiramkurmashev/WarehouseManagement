@@ -1,0 +1,82 @@
+﻿@model IEnumerable<WarehouseManagement.Models.Receipt>
+@using WarehouseManagement.Models
+@using WarehouseManagement.Models
+<h2>Документы поступления</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Создать новый</a>
+</p>
+
+<form method="get" class="mb-4">
+    <div class="row">
+        <div class="col-md-3">
+            <label>Дата от</label>
+            <input type="date" name="fromDate" class="form-control" value="@Context.Request.Query["fromDate"]" />
+        </div>
+        <div class="col-md-3">
+            <label>Дата до</label>
+            <input type="date" name="toDate" class="form-control" value="@Context.Request.Query["toDate"]" />
+        </div>
+        <div class="col-md-3">
+            <label>Ресурсы</label>
+            <select name="resourceIds" multiple class="form-control">
+                @foreach (var resource in ViewBag.Resources as List<Resource>)
+                {
+                    <option value="@resource.Id"
+                            selected="@(Context.Request.Query["resourceIds"].Contains(resource.Id.ToString()))">
+                        @resource.Name
+                    </option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label>Единицы измерения</label>
+            <select name="unitIds" multiple class="form-control">
+                @foreach (var unit in ViewBag.Units as List<Unit>)
+                {
+                    <option value="@unit.Id"
+                            selected="@(Context.Request.Query["unitIds"].Contains(unit.Id.ToString()))">
+                        @unit.Name
+                    </option>
+                }
+            </select>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Применить фильтры</button>
+    <a asp-action="Index" class="btn btn-secondary mt-2">Сбросить</a>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Номер</th>
+            <th>Дата</th>
+            <th>Ресурсы</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Number</td>
+                <td>@item.Date.ToShortDateString()</td>
+                <td>
+                    <ul>
+                        @foreach (var receiptItem in item.Items)
+                        {
+                            <li>
+                                @receiptItem.Resource?.Name - @receiptItem.Quantity @receiptItem.Unit?.Name
+                            </li>
+                        }
+                    </ul>
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Редактировать</a>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Подробности</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Удалить</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,136 @@
+﻿@model WarehouseManagement.Models.Receipt
+
+<h2>Создание документа поступления</h2>
+
+<form asp-action="Create" id="receiptForm">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="form-group">
+        <label asp-for="Number" class="control-label"></label>
+        <input asp-for="Number" class="form-control" required />
+        <span asp-validation-for="Number" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Date" class="control-label"></label>
+        <input asp-for="Date" type="date" class="form-control" required
+               value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+        <span asp-validation-for="Date" class="text-danger"></span>
+    </div>
+
+    <h4>Ресурсы</h4>
+    <table class="table" id="itemsTable">
+        <thead>
+            <tr>
+                <th>Ресурс</th>
+                <th>Единица измерения</th>
+                <th>Количество</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Items.Count; i++)
+            {
+                <tr>
+                    <td>
+                        <select asp-for="Items[i].ResourceId" asp-items="@(new SelectList(ViewBag.Resources, "Id", "Name"))"
+                                class="form-control" required>
+                            <option value="">Выберите ресурс</option>
+                        </select>
+                        <span asp-validation-for="Items[i].ResourceId" class="text-danger"></span>
+                    </td>
+                    <td>
+                        <select asp-for="Items[i].UnitId" asp-items="@(new SelectList(ViewBag.Units, "Id", "Name"))"
+                                class="form-control" required>
+                            <option value="">Выберите единицу</option>
+                        </select>
+                        <span asp-validation-for="Items[i].UnitId" class="text-danger"></span>
+                    </td>
+                    <td>
+                        <input asp-for="Items[i].Quantity" class="form-control" type="number" step="0.01" min="0.01" required />
+                        <span asp-validation-for="Items[i].Quantity" class="text-danger"></span>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger" onclick="removeItem(this)">Удалить</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="button" class="btn btn-secondary" onclick="addItem()">Добавить ресурс</button>
+
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary">Создать</button>
+        <a asp-action="Index" class="btn btn-secondary">Отмена</a>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        function addItem() {
+            const tbody = document.querySelector("#itemsTable tbody");
+            const index = tbody.rows.length;
+
+            const html = `
+                <tr>
+                    <td>
+                        <select name="Items[${index}].ResourceId" class="form-control" required>
+                            <option value="">Выберите ресурс</option>
+        @foreach (var resource in ViewBag.Resources)
+        {
+                                    <option value="@resource.Id">@resource.Name</option>
+        }
+                        </select>
+                    </td>
+                    <td>
+                        <select name="Items[${index}].UnitId" class="form-control" required>
+                            <option value="">Выберите единицу</option>
+        @foreach (var unit in ViewBag.Units)
+        {
+                                    <option value="@unit.Id">@unit.Name</option>
+        }
+                        </select>
+                    </td>
+                    <td>
+                        <input name="Items[${index}].Quantity" class="form-control" type="number" step="0.01" min="0.01" required />
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger" onclick="removeItem(this)">Удалить</button>
+                    </td>
+                </tr>`;
+
+            tbody.insertAdjacentHTML("beforeend", html);
+        }
+
+        function removeItem(button) {
+            const row = button.closest("tr");
+            row.remove();
+        }
+
+        // Клиентская валидация перед отправкой
+        document.getElementById("receiptForm").addEventListener("submit", function(e) {
+            const items = document.querySelectorAll("#itemsTable tbody tr");
+            let hasValidItems = false;
+
+            items.forEach(item => {
+                const resourceId = item.querySelector("[name$='ResourceId']").value;
+                const unitId = item.querySelector("[name$='UnitId']").value;
+                const quantity = item.querySelector("[name$='Quantity']").value;
+
+                if (resourceId && unitId && quantity) {
+                    hasValidItems = true;
+                }
+            });
+
+            if (!hasValidItems) {
+                alert("Добавьте хотя бы один ресурс");
+                e.preventDefault();
+            }
+        });
+    </script>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
