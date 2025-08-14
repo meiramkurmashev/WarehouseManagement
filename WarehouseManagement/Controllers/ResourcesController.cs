@@ -13,8 +13,12 @@ public class ResourcesController : Controller
     public async Task<IActionResult> Index(bool showInactive = false)
     {
         var resources = await _repository.GetAllAsync();
-        if (!showInactive)
+        if (!showInactive) { 
             resources = resources.Where(r => r.IsActive).ToList();
+        }
+        else { 
+            resources = resources.Where(u => u.IsActive == false);
+        }
 
         return View(resources);
     }

@@ -1,4 +1,4 @@
-﻿@model WarehouseManagement.Models.Receipt
+﻿@model WarehouseManagement.Models.Dto.ReceiptCreateDto
 
 <h2>Создание документа поступления</h2>
 
@@ -68,6 +68,53 @@
 
 @section Scripts {
     <script>
+                function addItem() {
+            const tbody = document.querySelector("#itemsTable tbody");
+            const index = tbody.rows.length;
+
+            const html = `
+                <tr>
+                    <td>
+                        <select name="Items[${index}].ResourceId" class="form-control" required>
+                            <option value="">Выберите ресурс</option>
+        @foreach (var resource in ViewBag.Resources)
+        {
+                                    <option value="@resource.Id">@resource.Name</option>
+        }
+                        </select>
+                        <span class="text-danger field-validation-valid"
+                              data-valmsg-for="Items[${index}].ResourceId"
+                              data-valmsg-replace="true"></span>
+                    </td>
+                    <td>
+                        <select name="Items[${index}].UnitId" class="form-control" required>
+                            <option value="">Выберите единицу</option>
+        @foreach (var unit in ViewBag.Units)
+        {
+                                    <option value="@unit.Id">@unit.Name</option>
+        }
+                        </select>
+                        <span class="text-danger field-validation-valid"
+                              data-valmsg-for="Items[${index}].UnitId"
+                              data-valmsg-replace="true"></span>
+                    </td>
+                    <td>
+                        <input name="Items[${index}].Quantity" class="form-control"
+                               type="number" step="0.01" min="0.01" required />
+                        <span class="text-danger field-validation-valid"
+                              data-valmsg-for="Items[${index}].Quantity"
+                              data-valmsg-replace="true"></span>
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-danger" onclick="removeItem(this)">Удалить</button>
+                    </td>
+                </tr>`;
+
+            tbody.insertAdjacentHTML("beforeend", html);
+
+            // Добавляем валидацию для новых полей
+            $.validator.unobtrusive.parse("form");
+        }
         function addItem() {
             const tbody = document.querySelector("#itemsTable tbody");
             const index = tbody.rows.length;

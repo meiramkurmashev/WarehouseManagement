@@ -96,19 +96,19 @@ namespace WarehouseManagement.Controllers
             return View(receipt);
         }
 
-        // GET: Receipts/Create
+  
+        [HttpGet]
         public async Task<IActionResult> Create()
         {
             await LoadViewData();
-            // Добавляем одну пустую строку для ресурса по умолчанию
-            return View(new Receipt
+            var model = new ReceiptCreateDto
             {
                 Date = DateTime.Today,
-                Items = new List<ReceiptItem> { new ReceiptItem() },
-                IsActive = true // Явно устанавливаем IsActive
-            });
+                Items = new List<ReceiptItemCreateDto> { new ReceiptItemCreateDto() } // Добавляем один пустой элемент
+            };
+            return View(model);
         }
-       
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ReceiptCreateDto receiptDto)
@@ -117,30 +117,32 @@ namespace WarehouseManagement.Controllers
             if (await _context.Receipts.AnyAsync(r => r.Number == receiptDto.Number))
             {
                 ModelState.AddModelError("Number", "Документ с таким номером уже существует");
+                await LoadViewData();
+                return View(receiptDto);
             }
 
             // Фильтрация элементов
-            receiptDto.Items = receiptDto.Items
+            receiptDto.Items = receiptDto.Items?
                 .Where(i => i.ResourceId > 0 && i.UnitId > 0 && i.Quantity > 0)
                 .ToList();
 
             if (receiptDto.Items == null || !receiptDto.Items.Any())
             {
                 ModelState.AddModelError("", "Добавьте хотя бы один ресурс");
+                await LoadViewData();
+                return View(receiptDto);
             }
 
             if (ModelState.IsValid)
             {
-                // Убедимся, что Date имеет правильный Kind (UTC)
                 var utcDate = receiptDto.Date.Kind == DateTimeKind.Unspecified
                     ? DateTime.SpecifyKind(receiptDto.Date, DateTimeKind.Utc)
                     : receiptDto.Date.ToUniversalTime();
 
-                // Маппинг DTO на модель
                 var receipt = new Receipt
                 {
                     Number = receiptDto.Number,
-                    Date = utcDate, // Используем дату с явным Kind=UTC
+                    Date = utcDate,
                     IsActive = true,
                     Items = receiptDto.Items.Select(i => new ReceiptItem
                     {
@@ -193,6 +195,7 @@ namespace WarehouseManagement.Controllers
             await LoadViewData();
             return View(receiptDto);
         }
+
         // POST: Receipts/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -275,13 +278,9 @@ namespace WarehouseManagement.Controllers
 
         private async Task LoadViewData()
         {
-            ViewBag.Resources = await _context.Resources
-                .Where(r => r.IsActive)
-                .ToListAsync();
-
-            ViewBag.Units = await _context.Units
-                .Where(u => u.IsActive)
-                .ToListAsync();
+            ViewData["Resources"] = await _context.Resources.ToListAsync();
+            ViewData["Units"] = await _context.Units.ToListAsync();
+            // Добавьте другие необходимые данные
         }
     }
 }
