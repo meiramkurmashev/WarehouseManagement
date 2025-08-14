@@ -22,11 +22,11 @@ namespace WarehouseManagement.Controllers
         // GET: Receipts
         [HttpGet]
         public async Task<IActionResult> Index(
-            bool showInactive = false,
-            DateTime? fromDate = null,
-            DateTime? toDate = null,
-            int[] resourceIds = null,
-            int[] unitIds = null)
+     bool showInactive = false,
+     DateTime? fromDate = null,
+     DateTime? toDate = null,
+     int[] resourceIds = null,
+     int[] unitIds = null)
         {
             var query = _context.Receipts
                 .Include(r => r.Items)
@@ -43,12 +43,18 @@ namespace WarehouseManagement.Controllers
 
             if (fromDate.HasValue)
             {
-                query = query.Where(r => r.Date >= fromDate.Value);
+                var fromDateUtc = fromDate.Value.Kind == DateTimeKind.Unspecified
+                    ? DateTime.SpecifyKind(fromDate.Value, DateTimeKind.Utc)
+                    : fromDate.Value.ToUniversalTime();
+                query = query.Where(r => r.Date >= fromDateUtc);
             }
 
             if (toDate.HasValue)
             {
-                query = query.Where(r => r.Date <= toDate.Value);
+                var toDateUtc = toDate.Value.Kind == DateTimeKind.Unspecified
+                    ? DateTime.SpecifyKind(toDate.Value.AddDays(1).Date, DateTimeKind.Utc)
+                    : toDate.Value.ToUniversalTime().AddDays(1).Date;
+                query = query.Where(r => r.Date < toDateUtc);
             }
 
             if (resourceIds != null && resourceIds.Length > 0)
