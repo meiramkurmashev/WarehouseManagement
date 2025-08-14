@@ -7,7 +7,10 @@
 
     <div class="form-group">
         <label asp-for="Number" class="control-label"></label>
-        <input asp-for="Number" class="form-control" required />
+        <input asp-for="Number" class="form-control"
+               pattern="\d+"
+               title="Введите только цифры"
+               required />
         <span asp-validation-for="Number" class="text-danger"></span>
     </div>
 
@@ -79,7 +82,7 @@
                             <option value="">Выберите ресурс</option>
         @foreach (var resource in ViewBag.Resources)
         {
-                                    <option value="@resource.Id">@resource.Name</option>
+                                        <option value="@resource.Id">@resource.Name</option>
         }
                         </select>
                         <span class="text-danger field-validation-valid"
@@ -91,7 +94,7 @@
                             <option value="">Выберите единицу</option>
         @foreach (var unit in ViewBag.Units)
         {
-                                    <option value="@unit.Id">@unit.Name</option>
+                                        <option value="@unit.Id">@unit.Name</option>
         }
                         </select>
                         <span class="text-danger field-validation-valid"
@@ -126,7 +129,7 @@
                             <option value="">Выберите ресурс</option>
         @foreach (var resource in ViewBag.Resources)
         {
-                                    <option value="@resource.Id">@resource.Name</option>
+                                        <option value="@resource.Id">@resource.Name</option>
         }
                         </select>
                     </td>
@@ -135,7 +138,7 @@
                             <option value="">Выберите единицу</option>
         @foreach (var unit in ViewBag.Units)
         {
-                                    <option value="@unit.Id">@unit.Name</option>
+                                        <option value="@unit.Id">@unit.Name</option>
         }
                         </select>
                     </td>
@@ -157,6 +160,17 @@
 
         // Клиентская валидация перед отправкой
         document.getElementById("receiptForm").addEventListener("submit", function(e) {
+            // Валидация номера
+            const numberInput = document.querySelector("input[name='Number']");
+            const numberPattern = new RegExp('^\\d+$');
+
+            if (!numberPattern.test(numberInput.value)) {
+                alert("Номер документа должен содержать только цифры");
+                e.preventDefault();
+                return;
+            }
+
+            // Валидация элементов
             const items = document.querySelectorAll("#itemsTable tbody tr");
             let hasValidItems = false;
 
@@ -174,8 +188,7 @@
                 alert("Добавьте хотя бы один ресурс");
                 e.preventDefault();
             }
-        });
-    </script>
+        });    </script>
 
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");

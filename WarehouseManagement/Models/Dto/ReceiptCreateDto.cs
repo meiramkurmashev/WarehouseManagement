@@ -9,7 +9,9 @@ namespace WarehouseManagement.Models.Dto
     {
         public int Id { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Поле номера обязательно")]
+        [RegularExpression(@"^\d+$", ErrorMessage = "Номер должен содержать только цифры")]
+        [Display(Name = "Номер документа")]
         public string Number { get; set; }
 
         [Required]

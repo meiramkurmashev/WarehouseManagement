@@ -79,6 +79,29 @@ namespace WarehouseManagement.Controllers
             return View(await query.ToListAsync());
         }
 
+        // GET: Receipts/Delete/5
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var receipt = await _context.Receipts
+                .Include(r => r.Items)
+                    .ThenInclude(i => i.Resource)
+                .Include(r => r.Items)
+                    .ThenInclude(i => i.Unit)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (receipt == null)
+            {
+                return NotFound();
+            }
+
+            return View(receipt);
+        }
+
         // GET: Receipts/Details/5
         public async Task<IActionResult> Details(int? id)
         {
