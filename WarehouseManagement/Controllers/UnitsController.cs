@@ -11,10 +11,11 @@ namespace WarehouseManagement.Controllers
     public class UnitsController : Controller
     {
         private readonly IRepository<Unit> _repository;
-
-        public UnitsController(IRepository<Unit> repository)
+        private readonly WarehouseDbContext _context;
+        public UnitsController(IRepository<Unit> repository, WarehouseDbContext context)
         {
             _repository = repository;
+            _context = context;
         }
 
         // GET: Units
@@ -166,6 +167,33 @@ namespace WarehouseManagement.Controllers
         private async Task<bool> UnitExists(int id)
         {
             return await _repository.GetByIdAsync(id) != null;
+        }
+
+        private async Task<bool> IsUnitUsed(int unitId)
+        {
+            return await _context.ReceiptItems.AnyAsync(ri => ri.UnitId == unitId);
+        }
+
+        [HttpPost, ActionName("HardDelete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> HardDeleteConfirmed(int id)
+        {
+            var unit = await _repository.GetByIdAsync(id);
+            if (unit == null)
+            {
+                return NotFound();
+            }
+
+            if (await IsUnitUsed(id))
+            {
+                TempData["ErrorMessage"] = "Единицу измерения нельзя удалить, так как она используется в документах поступления!";
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+
+            _context.Units.Remove(unit);
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Единица измерения успешно удалена!";
+            return RedirectToAction(nameof(Index));
         }
     }
 }

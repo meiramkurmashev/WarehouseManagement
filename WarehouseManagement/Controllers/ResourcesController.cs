@@ -1,14 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using WarehouseManagement.Data;
 using WarehouseManagement.Models;
 using WarehouseManagement.Services;
 
 public class ResourcesController : Controller
 {
     private readonly IRepository<Resource> _repository;
+    private readonly WarehouseDbContext _context;
 
-    public ResourcesController(IRepository<Resource> repository)
+    public ResourcesController(IRepository<Resource> repository, WarehouseDbContext context)
     {
         _repository = repository;
+        _context = context;
     }
     public async Task<IActionResult> Index(bool showInactive = false)
     {
@@ -78,6 +82,31 @@ public class ResourcesController : Controller
         resource.IsActive = false;
         await _repository.UpdateAsync(resource);
 
+        return RedirectToAction(nameof(Index));
+    }
+    private async Task<bool> IsResourceUsed(int resourceId)
+    {
+        return await _context.ReceiptItems.AnyAsync(ri => ri.ResourceId == resourceId);
+    }
+    [HttpPost, ActionName("HardDelete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> HardDeleteConfirmed(int id)
+    {
+        var resource = await _repository.GetByIdAsync(id);
+        if (resource == null)
+        {
+            return NotFound();
+        }
+
+        if (await IsResourceUsed(id))
+        {
+            TempData["ErrorMessage"] = "Ресурс нельзя удалить, так как он используется в документах поступления!";
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        _context.Resources.Remove(resource);
+        await _context.SaveChangesAsync();
+        TempData["SuccessMessage"] = "Ресурс успешно удалён!";
         return RedirectToAction(nameof(Index));
     }
 }

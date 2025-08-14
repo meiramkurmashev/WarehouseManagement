@@ -4,7 +4,22 @@
     ViewData["Title"] = "Редактировать ресурс";
 }
 
+
 <h2>@ViewData["Title"]</h2>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
 
 <hr />
 <div class="row">
@@ -25,7 +40,19 @@
             <div class="form-group mt-3">
                 <input type="submit" value="Сохранить" class="btn btn-primary" />
                 <a asp-action="Index" class="btn btn-secondary">Отмена</a>
+
+                <!-- Кнопка физического удаления -->
+                <button type="button"
+                        class="btn btn-danger"
+                        onclick="if(confirm('Вы уверены, что хотите полностью удалить этот ресурс?')) { document.getElementById('deleteForm').submit(); }">
+                    Удалить навсегда
+                </button>
             </div>
+        </form>
+
+        <!-- Скрытая форма для удаления -->
+        <form id="deleteForm" asp-action="HardDelete" method="post">
+            <input type="hidden" name="id" value="@Model.Id" />
         </form>
     </div>
 </div>
