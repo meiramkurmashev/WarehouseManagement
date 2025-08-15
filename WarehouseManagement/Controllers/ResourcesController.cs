@@ -1,115 +1,48 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WarehouseManagement.Data;
 using WarehouseManagement.Models;
 using WarehouseManagement.Services;
+using System.Threading.Tasks;
+using WarehouseManagement.Data;
 
-public class ResourcesController : Controller
+namespace WarehouseManagement.Controllers
 {
-    private readonly IRepository<Resource> _repository;
-    private readonly WarehouseDbContext _context;
-
-    public ResourcesController(IRepository<Resource> repository, WarehouseDbContext context)
+    public class ResourcesController : BaseController<Resource>
     {
-        _repository = repository;
-        _context = context;
-    }
-    public async Task<IActionResult> Index(bool showInactive = false)
-    {
-        var resources = await _repository.GetAll().Where(r => r.IsActive).ToListAsync();
-
-        return View(resources);
-    }
-
-    public IActionResult Create() => View();
-
-    [HttpPost]
-    public async Task<IActionResult> Create(Resource resource)
-    {
-        try
+        public ResourcesController(IRepository<Resource> repository, WarehouseDbContext context)
+            : base(repository, context)
         {
-            if (await _repository.ExistsAsync(r => r.Name == resource.Name))
+        }
+
+        [HttpPost]
+        public override async Task<IActionResult> Create(Resource resource)
+        {
+            try
+            {
+                if (await _repository.ExistsAsync(r => r.Name == resource.Name))
+                    ModelState.AddModelError("Name", "Ресурс с таким названием уже существует");
+
+                return await base.Create(resource);
+            }
+            catch
+            {
+                ModelState.AddModelError("", "Произошла ошибка при создании ресурса");
+                return View(resource);
+            }
+        }
+
+        [HttpPost]
+        public override async Task<IActionResult> Edit(int id, Resource resource)
+        {
+            if (await _repository.ExistsAsync(r => r.Name == resource.Name && r.Id != id))
                 ModelState.AddModelError("Name", "Ресурс с таким названием уже существует");
 
-            if (ModelState.IsValid)
-            {
-                await _repository.AddAsync(resource);
-                return RedirectToAction(nameof(Index));
-            }
-            return View(resource);
+            return await base.Edit(id, resource);
         }
-        catch (Exception ex)
+
+        protected override async Task<bool> IsEntityUsed(int id)
         {
-            // Логирование ошибки
-            ModelState.AddModelError("", "Произошла ошибка при создании ресурса");
-            return View(resource);
+            return await _context.ReceiptItems.AnyAsync(ri => ri.ResourceId == id);
         }
-    }
-
-    public async Task<IActionResult> Edit(int id)
-    {
-        var resource = await _repository.GetByIdAsync(id);
-        if (resource == null) return NotFound();
-        return View(resource);
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> Edit(int id, Resource resource)
-    {
-        if (id != resource.Id) return NotFound();
-
-        if (await _repository.ExistsAsync(r => r.Name == resource.Name && r.Id != id))
-            ModelState.AddModelError("Name", "Ресурс с таким названием уже существует");
-
-        if (ModelState.IsValid)
-        {
-            await _repository.UpdateAsync(resource);
-            return RedirectToAction(nameof(Index));
-        }
-        return View(resource);
-    }
-
-    public async Task<IActionResult> Delete(int id)
-    {
-        var resource = await _repository.GetByIdAsync(id);
-        if (resource == null) return NotFound();
-        return View(resource);
-    }
-
-    [HttpPost, ActionName("Delete")]
-    public async Task<IActionResult> DeleteConfirmed(int id)
-    {
-        var resource = await _repository.GetByIdAsync(id);
-        if (resource == null) return NotFound();
-
-        resource.IsActive = false;
-        await _repository.UpdateAsync(resource);
-
-        return RedirectToAction(nameof(Index));
-    }
-    private async Task<bool> IsResourceUsed(int resourceId)
-    {
-        return await _context.ReceiptItems.AnyAsync(ri => ri.ResourceId == resourceId);
-    }
-    [HttpPost, ActionName("HardDelete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> HardDeleteConfirmed(int id)
-    {
-        var resource = await _repository.GetByIdAsync(id);
-        if (resource == null)
-        {
-            return NotFound();
-        }
-
-        if (await IsResourceUsed(id))
-        {
-            TempData["ErrorMessage"] = "Ресурс нельзя удалить, так как он используется в документах поступления!";
-            return RedirectToAction(nameof(Edit), new { id });
-        }
-
-        _context.Resources.Remove(resource);
-        await _context.SaveChangesAsync();
-        TempData["SuccessMessage"] = "Ресурс успешно удалён!";
-        return RedirectToAction(nameof(Index));
     }
 }
