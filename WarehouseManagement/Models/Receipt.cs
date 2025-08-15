@@ -17,7 +17,7 @@ namespace WarehouseManagement.Models
         [Display(Name = "Дата поступления")]
         public DateTime Date { get; set; } = DateTime.Today;
 
-        public bool IsActive { get; set; } // Убрали internal
+        public bool IsActive { get; set; } 
 
         public List<ReceiptItem> Items { get; set; } = new List<ReceiptItem>();
     }

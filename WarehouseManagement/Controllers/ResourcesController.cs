@@ -16,13 +16,7 @@ public class ResourcesController : Controller
     }
     public async Task<IActionResult> Index(bool showInactive = false)
     {
-        var resources = await _repository.GetAllAsync();
-        if (!showInactive) { 
-            resources = resources.Where(r => r.IsActive).ToList();
-        }
-        else { 
-            resources = resources.Where(u => u.IsActive == false);
-        }
+        var resources = await _repository.GetAll().Where(r => r.IsActive).ToListAsync();
 
         return View(resources);
     }
@@ -32,15 +26,24 @@ public class ResourcesController : Controller
     [HttpPost]
     public async Task<IActionResult> Create(Resource resource)
     {
-        if (await _repository.ExistsAsync(r => r.Name == resource.Name))
-            ModelState.AddModelError("Name", "Ресурс с таким названием уже существует");
-
-        if (ModelState.IsValid)
+        try
         {
-            await _repository.AddAsync(resource);
-            return RedirectToAction(nameof(Index));
+            if (await _repository.ExistsAsync(r => r.Name == resource.Name))
+                ModelState.AddModelError("Name", "Ресурс с таким названием уже существует");
+
+            if (ModelState.IsValid)
+            {
+                await _repository.AddAsync(resource);
+                return RedirectToAction(nameof(Index));
+            }
+            return View(resource);
         }
-        return View(resource);
+        catch (Exception ex)
+        {
+            // Логирование ошибки
+            ModelState.AddModelError("", "Произошла ошибка при создании ресурса");
+            return View(resource);
+        }
     }
 
     public async Task<IActionResult> Edit(int id)

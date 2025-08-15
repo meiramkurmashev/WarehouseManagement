@@ -3,7 +3,7 @@ using WarehouseManagement.Models;
 
 public class ReceiptItem
 {
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // Убедитесь, что Id автоинкрементный
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
     public int Id { get; set; }
 
     public int ReceiptId { get; set; }

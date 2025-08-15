@@ -13,13 +13,11 @@ namespace WarehouseManagement.Services
             _context = context;
         }
 
-        // Новый метод для IQueryable
         public IQueryable<T> GetAll()
         {
             return _context.Set<T>().AsQueryable();
         }
 
-        // Существующие методы
         public async Task<IEnumerable<T>> GetAllAsync() => await _context.Set<T>().ToListAsync();
 
         public async Task<T> GetByIdAsync(int id) => await _context.Set<T>().FindAsync(id);

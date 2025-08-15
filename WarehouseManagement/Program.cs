@@ -5,21 +5,11 @@ using WarehouseManagement.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// регистрация сервисов
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<WarehouseDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddScoped<IRepository<Resource>>(provider =>
-    new Repository<Resource>(provider.GetRequiredService<WarehouseDbContext>()));
-// Регистрация универсального репозитория
-builder.Services.AddScoped<IRepository<Unit>>(provider =>
-    new Repository<Unit>(provider.GetRequiredService<WarehouseDbContext>()));
-builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-
-// Регистрация конкретных репозиториев (опционально)
-builder.Services.AddScoped<IRepository<Resource>, Repository<Resource>>();
-builder.Services.AddScoped<IRepository<Unit>, Repository<Unit>>();
-var app = builder.Build();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>)); var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -34,7 +24,7 @@ using (var scope = app.Services.CreateScope())
         logger.LogError(ex, "Ошибка при инициализации базы данных");
     }
 }
-// Configure the HTTP request pipeline.
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");

@@ -15,11 +15,11 @@ namespace WarehouseManagement.Models.Dto
         public string Number { get; set; }
 
         [Required]
+        [Display(Name = "Дата")]
         public DateTime Date { get; set; }
 
         public bool IsActive { get; set; }
 
-        // Используем ReceiptItemCreateDto вместо ReceiptItemDto
         public List<ReceiptItemCreateDto> Items { get; set; } = new List<ReceiptItemCreateDto>();
     }
 

@@ -309,7 +309,6 @@ namespace WarehouseManagement.Controllers
         {
             ViewData["Resources"] = await _context.Resources.ToListAsync();
             ViewData["Units"] = await _context.Units.ToListAsync();
-            // Добавьте другие необходимые данные
         }
     }
 }

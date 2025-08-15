@@ -12,6 +12,7 @@ namespace WarehouseManagement.Controllers
     {
         private readonly IRepository<Unit> _repository;
         private readonly WarehouseDbContext _context;
+
         public UnitsController(IRepository<Unit> repository, WarehouseDbContext context)
         {
             _repository = repository;
@@ -157,7 +158,6 @@ namespace WarehouseManagement.Controllers
                 return NotFound();
             }
 
-            // Вместо удаления переводим в архив
             unit.IsActive = false;
             await _repository.UpdateAsync(unit);
 
